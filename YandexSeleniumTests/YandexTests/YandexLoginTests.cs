@@ -1,20 +1,48 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Remote;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using YandexSeleniumTests;
+using Assert = NUnit.Framework.Assert;
 
 namespace YandexTests
 {
-    [TestClass]
+    [TestFixture]
     public class YandexLoginTests
     {
-        [TestMethod]
+        private IWebDriver driver;
+
+        [SetUp]
+        public void Open()
+        {
+            driver = new RemoteWebDriver(new Uri("http://localhost:4444/wd/hub"), GetChromeOptions().ToCapabilities(), TimeSpan.FromSeconds(60));
+        }
+        private ChromeOptions GetChromeOptions()
+        {
+            var chromeOptions = new ChromeOptions();
+            var selenoidOptions = new Dictionary<string, object> { { "sessionTimeout", "2m" } };
+            chromeOptions.AddArgument("--no-sandbox");
+            chromeOptions.AddArgument("--start-maximized");
+            chromeOptions.AddArgument("--disable-infobars");
+            chromeOptions.AddArgument("--disable-extensions");
+            chromeOptions.AddUserProfilePreference("download.prompt_for_download", false);
+            chromeOptions.AddUserProfilePreference("download.directory_upgrade", true);
+            chromeOptions.AddAdditionalOption("selenoid:options", selenoidOptions);
+            return chromeOptions;
+        }
+
+        [TearDown]
+        public void Close()
+        {
+            driver.Close();
+        }
+        [Test]
         public void LoginYandexTest()
         {
-            IWebDriver driver = new ChromeDriver();
-
             driver.Url = "https://www.yandex.com/";
 
             driver.Manage().Window.Maximize();
@@ -37,7 +65,6 @@ namespace YandexTests
 
             Assert.IsTrue(element.Displayed, "Wrong page!");
 
-            driver.Close();
         }
     }
 }
